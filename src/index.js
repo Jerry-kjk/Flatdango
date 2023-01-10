@@ -1,46 +1,59 @@
-const URL = " http://localhost:3000/films";
-
-//Fetch first movie details
-function fetchFirstMovie (id) {
-    fetch(`${URL}/${id}`)
-    .then(response => response.json())
-    .then(movie => {
-        document.getElementById("poster").src = movie.poster;
-
-        document.getElementById("title").innerHTML = movie.title;
-
-        document.getElementById("runtime").innerHTML = movie.runtime;
-
-        document.getElementById("film-info").innerHTML = movie.description;
-
-        document.getElementById("showtime").innerHTML = movie.showtime;
-
-        document.getElementById("ticket-num").innerHTML = movie.capacity - movie.tickets_sold;
-    })
+function fetchFilms() {
+    fetch('https://api.npoint.io/1e77e2b3a524e94aea30/films/')
+      .then(res => res.json())
+      .then(data => renderFilms(data));
 }
 
-//Fetch movie titles
-function fetchMovieTitles () {
-    return fetch(`${URL}`)
-    .then(response => response.json())
-}
+function renderFilms(data) {
+    const div = document.getElementById('card');
+    const ul = document.getElementById('films');
+    
+    data.forEach(movie => {
+      const li = document.createElement('li');
+      li.classList.add('pointer', 'bold-italic-text');
+      li.innerHTML = movie.title;
 
-//Display movie titles
-function renderMovieTitles (movieTitles) {
-    const movieList = document.getElementById("films");
-    const movies = document.createElement("li");
-    movies.innerHTML = movieTitles.title.toUpperCase();
+      const filmCard = document.createElement("div");
+      filmCard.classList.add('film-card');
+      filmCard.innerHTML = `
+        <img src="${movie.poster}" height=500px width=300px/>
+        <h2 class="bold-text">${movie.title}</h2>
+        <p class="bold-text">${movie.description}</p>
+        <p><span class="highlight bold-text">Runtime: ${movie.runtime}</span></p>
+        <p><span class="highlight bold-text">Showtime: ${movie.showtime}</span></p>
+      `;
 
-    movieList.appendChild(movies);
-}
+      const tickets = document.createElement("p");
+      tickets.classList.add("bold-italic-text")
+      tickets.innerHTML = `Available tickets: ${(movie.capacity) - (movie.tickets_sold)}`;
 
-fetchMovieTitles().then(movies => {
-    movies.forEach(movie => {
-        renderMovieTitles(movie);
-    })
-})
+      filmCard.appendChild(tickets);
 
-document.addEventListener("DOMContentLoaded", function () {
-    fetchFirstMovie(1);
-    fetchMovieTitles();
-})
+
+      const btn = document.createElement("button");
+      btn.textContent = "Buy ticket";
+      btn.addEventListener('click', () => {
+        if (parseInt(tickets.innerText.split(': ')[1]) === 0) {
+          alert("Ticket Sold Out");
+        } 
+        else {
+          tickets.innerText = `Available tickets: ${parseInt(tickets.innerText.split(': ')[1]) - 1}`;
+        }
+      });
+
+      filmCard.appendChild(btn);
+
+      li.addEventListener('click', () => {
+        div.innerText=""
+        div.appendChild(filmCard);
+
+        if (!filmCard.classList.contains('active')) {
+            filmCard.classList.add('active');  
+            div.appendChild(filmCard);
+        }
+      
+      });
+      ul.appendChild(li);
+    });
+  }
+  fetchFilms();
